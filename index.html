@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Library</title>
+    <style>
+      .pdf-list {
+        list-style-type: none;
+      }
+      .pdf-list li {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="text" id="searchTerm" placeholder="Search for a PDF" />
+    <button id="searchButton">Search</button>
+    <ul id="pdfList" class="pdf-list">
+      <!-- PDF links will be added here by JavaScript -->
+    </ul>
+
+    <script>
+      // Event listener for the search button
+      document
+        .getElementById("searchButton")
+        .addEventListener("click", performSearch);
+
+      // Event listener for the search input field
+      document
+        .getElementById("searchTerm")
+        .addEventListener("keyup", function (event) {
+          if (event.keyCode === 13) {
+            // 13 is the key code for Enter
+            performSearch();
+          }
+        });
+
+      let pdfFiles = [];
+
+      fetch("books.json")
+        .then((response) => response.json())
+        .then((data) => {
+          pdfFiles = data;
+          displayPDFs(pdfFiles);
+        })
+        .catch((error) => console.error("Error:", error));
+
+      // Function to display PDF files
+      function displayPDFs(pdfs) {
+        const list = document.getElementById("pdfList");
+        // Clear the list
+        while (list.firstChild) {
+          list.removeChild(list.firstChild);
+        }
+
+        // Check if any PDFs were found
+        if (pdfs.length === 0) {
+          // No PDFs found, display a message
+          const listItem = document.createElement("li");
+          listItem.textContent = "No PDFs found";
+          list.appendChild(listItem);
+        } else {
+          // PDFs found, add new list items
+          pdfs.forEach((pdf) => {
+            const listItem = document.createElement("li");
+            const link = document.createElement("a");
+            link.href = "#";
+            link.textContent = pdf.name;
+            link.addEventListener("click", () =>
+              openPDFViewer(pdf.name, pdf.url)
+            );
+            listItem.appendChild(link);
+            list.appendChild(listItem);
+          });
+        }
+      }
+
+      // Call the function on page load
+      displayPDFs(pdfFiles);
+
+      function performSearch() {
+        const searchTerm = document.getElementById("searchTerm").value;
+        const filteredPdfs = pdfFiles.filter((pdf) =>
+          pdf.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        displayPDFs(filteredPdfs);
+      }
+
+      function openPDFViewer(pdfName, pdfUrl) {
+        const pdfViewer = window.open("", "_blank");
+        pdfViewer.document.write(`
+                <html>
+                <head>
+                    <title>${pdfName}</title>
+                </head>
+                <body>
+                    <h1>${pdfName}</h1>
+                    <button onclick="window.close()">Back</button>
+                    <embed src="${pdfUrl}" type="application/pdf" width="100%" height="90%" />
+                </body>
+                </html>
+            `);
+      }
+    </script>
+  </body>
+</html>
